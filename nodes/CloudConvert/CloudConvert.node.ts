@@ -4,6 +4,7 @@ import { IExecuteFunctions } from 'n8n-core';
 import {
 	IBinaryData,
 	IBinaryKeyData,
+	IDataObject,
 	// IDataObject,
 	INodeExecutionData,
 	INodeType,
@@ -20,7 +21,7 @@ export class CloudConvert implements INodeType {
 		documentationUrl: 'https://github.com/one-acre-fund/n8n-nodes-cloudconvert',
 		name: 'cloudConvert',
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-icon-not-svg
-		icon: 'file:cloudConvert.png',
+		icon: 'file:cloudconvert-logo.png',
 		group: ['transform'],
 		version: 1,
 		description: 'A node to execute file conversion jobs on https://cloudconvert.com',
@@ -261,6 +262,52 @@ export class CloudConvert implements INodeType {
 			// 		},
 			// 	],
 			// },
+
+			{
+				displayName: 'List Options',
+				name: 'list_options',
+				type: 'collection',
+				default: {},
+				description: 'Options for job list',
+				displayOptions: {
+					show: {
+						resource: ['job'],
+						operation: ['list'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Status Filter',
+						name: 'status',
+						type: 'options',
+						options: [
+							{
+								name: 'All',
+								value: '',
+							},
+							{
+								name: 'Error',
+								value: 'error',
+							},
+							{
+								name: 'Finished',
+								value: 'finished',
+							},
+							{
+								name: 'Processing',
+								value: 'processing',
+							},
+						],
+						default: '',
+					},
+					{
+						displayName: 'Tag Filter',
+						name: 'tag',
+						type: 'string',
+						default: '',
+					},
+				],
+			},
 		],
 	};
 
@@ -287,11 +334,17 @@ export class CloudConvert implements INodeType {
 					// ----------------------------------
 					//          Job::list
 					// ----------------------------------
+					const listOptions = this.getNodeParameter('list_options', i) as IDataObject;
+
 					responseData = await cloudConvertApiRequest.call(this, {
 						url: `/v2/jobs`,
+						qs: {
+							...(listOptions.tag && { 'filter[tag]': listOptions.tag }),
+							...(listOptions.status && { 'filter[status]': listOptions.status }),
+						},
 					});
 
-					returnData = returnData.concat(responseData);
+					returnData = returnData.concat(responseData.data || []);
 				}
 
 				if (operation === 'get') {

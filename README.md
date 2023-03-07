@@ -1,6 +1,6 @@
 # n8n-nodes-cloudconvert
 
-![logo](./nodes/CloudConvert/cloudconvert.png)
+![logo](./nodes/CloudConvert/cloudconvert-logo.png)
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudconvert.svg)](https://badge.fury.io/js/n8n-nodes-cloudconvert)
 
@@ -48,8 +48,8 @@ Note that it's strongly recommended to perform your tests against the sandbox en
 
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 - [CloudConvert API Docs](https://cloudconvert.com/api/v2)
+- [The CloudConvert Visual Job Builder](https://cloudconvert.com/api/v2/jobs/builder#) which can be used to build the job definition JSON
 
 ## TODO
 
-- Trigger node handling webhooks
-- Filters in Get All Jobs
+- Trigger node, handling webhooks

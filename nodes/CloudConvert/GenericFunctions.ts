@@ -31,10 +31,10 @@ export async function cloudConvertApiRequest(
 		Object.assign(options, option);
 	}
 
-	console.dir(options, { depth: 10 });
+	// console.dir(options, { depth: 10 });
 	try {
 		const response = await this.helpers.httpRequest(options);
-		console.dir(response, { depth: 10 });
+		// console.dir(response, { depth: 10 });
 		return response;
 	} catch (error) {
 		// console.dir(response, { depth: 10 });
