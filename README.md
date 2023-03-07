@@ -4,6 +4,8 @@
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudconvert.svg)](https://badge.fury.io/js/n8n-nodes-cloudconvert)
 
+[![.github/workflows/publish-npm.yml](https://github.com/Yann-J/n8n-nodes-cloudconvert/actions/workflows/publish-npm.yml/badge.svg)](https://github.com/Yann-J/n8n-nodes-cloudconvert/actions/workflows/publish-npm.yml)
+
 This is an n8n community node. It lets you use [_CloudConvert_](https://cloudconvert.com) in your n8n workflows.
 
 [_CloudConvert_](https://cloudconvert.com) is an online service providing all sorts of file processing / transformation features, that can be used to convert or tweak PDFs, images, ebooks, audio, documents, etc...
