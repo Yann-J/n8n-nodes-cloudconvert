@@ -427,6 +427,7 @@ export class CloudConvert implements INodeType {
 								path: '$.result.files[*]',
 								json: exportTask,
 							})) {
+								let index = 0;
 								// console.log(`Downloading result file from ${outputFile.url}`);
 
 								const fileContent = await this.helpers.httpRequest({
@@ -436,10 +437,8 @@ export class CloudConvert implements INodeType {
 
 								// console.dir(fileContent);
 
-								binaryItem.binary![exportTask.name] = await this.helpers.prepareBinaryData(
-									fileContent,
-									outputFile.filename,
-								);
+								binaryItem.binary![`${exportTask.name}_${index++}`] =
+									await this.helpers.prepareBinaryData(fileContent, outputFile.filename);
 							}
 
 							binaryItems.push(binaryItem);

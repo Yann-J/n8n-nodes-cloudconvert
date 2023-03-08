@@ -41,10 +41,27 @@ Tested on n8n 0.206.1
 
 ## Usage
 
+### Sandbox Usage
+
 Note that it's strongly recommended to perform your tests against the sandbox environment, which needs to be enabled first and which uses a separate API key. Note that:
 
 - Separate credentials should be created for the live and sandbox environments.
 - The main limitation of the sandbox environment is that all imported files need to be whitelisted first before processing (based on the file's `md5` hash).
+
+### Job Definitions
+
+The most useful operation is to send new conversion jobs to CloudConvert. The definition of each job is done in JSON format, and the [CloudConvert Job Builder UI](https://cloudconvert.com/api/v2/jobs/builder) can be used to build the job definition visually and interactively, and copy-paste the resulting JSON.
+
+This node provides convenience methods to manipulate files, notably:
+
+- There's an option to automatically upload binary attachments to the job (using an `import/base64` task - this task will be automatically added to the job definition, you won't need to specify it).
+- There's an option to automatically download any resulting exported file (only the `export/url` tasks are supported).
+
+Here's a sample workflow / node definition:
+
+![logo](./docs/workflow.png)
+
+![logo](./docs/sample.png)
 
 ## Resources
 

@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-cloudconvert",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "A Node to send file conversion jobs to cloudconvert.com",
 	"keywords": [
 		"n8n-community-node-package",
