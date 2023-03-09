@@ -6,6 +6,7 @@ import {
 	INodeTypeDescription,
 	IWebhookFunctions,
 	IWebhookResponseData,
+	// LoggerProxy,
 } from 'n8n-workflow';
 
 import { cloudConvertApiRequest, downloadExports } from './GenericFunctions';
@@ -112,7 +113,14 @@ export class CloudConvertTrigger implements INodeType {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				const webhookUrl = this.getNodeWebhookUrl('default') as string;
+
+				if (/^http(s)?:\/\/localhost.*/.test(webhookUrl)) {
+					// console.log('Skipping local webhook registration');
+					// ignore localhost webhook registrations, those are tests
+					return true;
+				}
+
 				const webhooks = await cloudConvertApiRequest.call(this, {
 					url: `/v2/users/me/webhooks`,
 					qs: {
@@ -133,8 +141,14 @@ export class CloudConvertTrigger implements INodeType {
 
 			async create(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				const webhookUrl = this.getNodeWebhookUrl('default') as string;
 				const events = this.getNodeParameter('events') as string[];
+
+				if (/^http(s)?:\/\/localhost.*/.test(webhookUrl)) {
+					// ignore localhost webhook registrations, those are tests
+					// console.log('Skipping local webhook registration');
+					return true;
+				}
 
 				const response = await cloudConvertApiRequest.call(this, {
 					method: 'POST',
@@ -157,17 +171,20 @@ export class CloudConvertTrigger implements INodeType {
 			async delete(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
 
-				try {
-					await cloudConvertApiRequest.call(this, {
-						method: 'DELETE',
-						url: `/v2/webhooks/${webhookData.webhookId}`,
-					});
-				} catch (error) {
-					return false;
+				if (webhookData.webhookId) {
+					try {
+						await cloudConvertApiRequest.call(this, {
+							method: 'DELETE',
+							url: `/v2/webhooks/${webhookData.webhookId}`,
+						});
+					} catch (error) {
+						return false;
+					}
+
+					delete webhookData.webhookId;
+					delete webhookData.webhookSigningSecret;
 				}
 
-				delete webhookData.webhookId;
-				delete webhookData.webhookSigningSecret;
 				return true;
 			},
 		},
@@ -192,13 +209,11 @@ export class CloudConvertTrigger implements INodeType {
 			// console.log('hash', hash);
 			if (signature !== hash) {
 				// console.log('Received webhook has invalid signature, skipping');
-				return {
-					workflowData: [[]],
-				};
+				return {};
 			}
 		}
 
-		// console.dir(req, { depth: 10 });
+		// console.dir(req.body, { depth: 10 });
 		// download result files for sync requests
 		const binaryItem: INodeExecutionData = {
 			json: req.body,
@@ -206,6 +221,7 @@ export class CloudConvertTrigger implements INodeType {
 		};
 
 		if (download && req.body && req.body.job && 'job.finished' === req.body.event) {
+			// console.log('Fetching attachments');
 			await downloadExports.call(this, req.body.job, binaryItem);
 		}
 

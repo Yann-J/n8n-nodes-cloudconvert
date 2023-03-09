@@ -33,14 +33,14 @@ export async function cloudConvertApiRequest(
 		Object.assign(options, option);
 	}
 
-	console.dir(options, { depth: 10 });
+	// console.dir(options, { depth: 10 });
 	try {
 		// Support pagination
 		let response = null;
 		let keepLooking = true;
 		while (keepLooking) {
 			const batch = await this.helpers.httpRequest(options);
-			console.dir(batch, { depth: 10 });
+			// console.dir(batch, { depth: 10 });
 			// Append or set results
 			response = response && response.length ? response.concat(batch.data) : batch.data || batch;
 			if (batch.links && batch.links.next) {
@@ -50,13 +50,13 @@ export async function cloudConvertApiRequest(
 			}
 		}
 
-		console.dir(response, { depth: 10 });
+		// console.dir(response, { depth: 10 });
 		return response;
 	} catch (error) {
 		if (error.response?.data?.message) {
 			error.message += ` - ${error.response.data.code}: ${error.response.data.message}`;
 		}
-		console.dir(error, { depth: 10 });
+		// console.dir(error, { depth: 10 });
 
 		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
