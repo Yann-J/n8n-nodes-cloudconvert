@@ -48,6 +48,10 @@ export class CloudConvert implements INodeType {
 						value: 'job',
 						description: 'Conversion Jobs',
 					},
+					{
+						name: 'Webhook',
+						value: 'webhook',
+					},
 				],
 				default: 'job',
 				required: true,
@@ -75,12 +79,37 @@ export class CloudConvert implements INodeType {
 					{
 						name: 'Get All',
 						value: 'list',
-						action: 'Get all links',
+						action: 'Get all jobs',
 					},
 					{
 						name: 'Get One',
 						value: 'get',
-						action: 'Get link',
+						action: 'Get job',
+					},
+				],
+			},
+			{
+				displayName: 'Create',
+				name: 'operation',
+				type: 'options',
+				required: true,
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['webhook'],
+					},
+				},
+				default: 'list',
+				options: [
+					{
+						name: 'Get All',
+						value: 'list',
+						action: 'Get all webhooks',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						action: 'Delete webhook',
 					},
 				],
 			},
@@ -307,6 +336,34 @@ export class CloudConvert implements INodeType {
 					},
 				],
 			},
+
+			// Webhook options
+			{
+				displayName: 'Webhook ID',
+				name: 'webhook_id',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['webhook'],
+						operation: ['delete'],
+					},
+				},
+			},
+			{
+				displayName: 'Webhook URL',
+				name: 'webhook_url',
+				type: 'string',
+				default: '',
+				description: 'The result will be filtered to include only webhooks with a specific URL',
+				displayOptions: {
+					show: {
+						resource: ['webhook'],
+						operation: ['list'],
+					},
+				},
+			},
 		],
 	};
 
@@ -326,7 +383,7 @@ export class CloudConvert implements INodeType {
 
 			if (resource === 'job') {
 				// *********************************************************************
-				//                             Link
+				//                             Jobs
 				// *********************************************************************
 
 				if (operation === 'list') {
@@ -370,7 +427,7 @@ export class CloudConvert implements INodeType {
 						url: `/v2/jobs/${jobId}`,
 					});
 
-					returnData = returnData.concat(responseData);
+					returnData = returnData.concat([{ success: true }]);
 				}
 
 				if (operation === 'create') {
@@ -421,6 +478,42 @@ export class CloudConvert implements INodeType {
 					}
 
 					returnData = returnData.concat(responseData);
+				}
+			}
+
+			if (resource === 'webhook') {
+				// *********************************************************************
+				//                             Webhooks
+				// *********************************************************************
+
+				if (operation === 'list') {
+					// ----------------------------------
+					//          Webhook::list
+					// ----------------------------------
+					const url = this.getNodeParameter('webhook_url', i, '') as string;
+
+					responseData = await cloudConvertApiRequest.call(this, {
+						url: `/v2/users/me/webhooks`,
+						qs: {
+							...(url && { 'filter[url]': url }),
+						},
+					});
+
+					returnData = returnData.concat(responseData || []);
+				}
+
+				if (operation === 'delete') {
+					// ----------------------------------
+					//          Webhook::delete
+					// ----------------------------------
+					const webhookId = this.getNodeParameter('webhook_id', i, '') as string;
+
+					responseData = await cloudConvertApiRequest.call(this, {
+						method: 'delete',
+						url: `/v2/webhooks/${webhookId}`,
+					});
+
+					returnData = returnData.concat([{ success: true }]);
 				}
 			}
 		}

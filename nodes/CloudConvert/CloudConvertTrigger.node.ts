@@ -104,31 +104,6 @@ export class CloudConvertTrigger implements INodeType {
 				description: 'Whether to validate the webhook signature',
 				displayOptions: {},
 			},
-			{
-				displayName: 'Signing Secret',
-				name: 'sign_key',
-				type: 'string',
-				default: '',
-				displayOptions: {
-					show: {
-						verify: [true],
-					},
-				},
-				description:
-					'Get the signing secret from the webhook settings in your CloudConvert Dashboard',
-			},
-			{
-				displayName:
-					'<strong>NOTE</strong>: You can get your signing secret from the webhook settings in your <a href="https://cloudconvert.com/dashboard/api/v2/webhooks">CloudConvert Dashboard</a>.<br/><strong>WARNING</strong>, this key will be changed every time you recreate the webhook!',
-				name: 'notice_signature',
-				type: 'notice',
-				default: '',
-				displayOptions: {
-					show: {
-						verify: [true],
-					},
-				},
-			},
 		],
 	};
 
@@ -147,8 +122,9 @@ export class CloudConvertTrigger implements INodeType {
 
 				// console.dir(webhooks);
 
-				if (webhooks && webhooks.data && webhooks.data.length) {
-					webhookData.webhookId = webhooks.data[0].id;
+				if (webhooks && webhooks.length) {
+					webhookData.webhookId = webhooks[0].id;
+					webhookData.webhookSigningSecret = webhooks[0].signing_secret;
 					return true;
 				}
 
@@ -169,8 +145,9 @@ export class CloudConvertTrigger implements INodeType {
 					},
 				});
 
-				if (response.data && response.data.id) {
-					webhookData.webhookId = response.data.id;
+				if (response.id) {
+					webhookData.webhookId = response.id;
+					webhookData.webhookSigningSecret = response.signing_secret;
 					return true;
 				}
 
@@ -188,7 +165,9 @@ export class CloudConvertTrigger implements INodeType {
 				} catch (error) {
 					return false;
 				}
+
 				delete webhookData.webhookId;
+				delete webhookData.webhookSigningSecret;
 				return true;
 			},
 		},
@@ -197,11 +176,12 @@ export class CloudConvertTrigger implements INodeType {
 	methods = {};
 
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
+		const webhookData = this.getWorkflowStaticData('node');
 		const req = this.getRequestObject();
 		// console.dir(req, { depth: 10 });
 		const download = this.getNodeParameter('download', false) as boolean;
 		const verify = this.getNodeParameter('verify', false) as boolean;
-		const signKey = this.getNodeParameter('sign_key', '') as string;
+		const signKey = webhookData.webhookSigningSecret as string;
 
 		if (verify && signKey) {
 			const signature = req.header('CloudConvert-Signature');

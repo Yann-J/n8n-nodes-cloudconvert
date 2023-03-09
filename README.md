@@ -77,4 +77,4 @@ Here's a sample workflow / node definition:
 
 ## TODO
 
-- Webhook operations
+- Improve logging
