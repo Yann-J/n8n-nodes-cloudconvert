@@ -1,4 +1,3 @@
-import { JSONPath } from 'jsonpath-plus';
 import { IExecuteFunctions } from 'n8n-core';
 
 import {
@@ -12,7 +11,7 @@ import {
 	// NodeOperationError,
 } from 'n8n-workflow';
 
-import { cloudConvertApiRequest } from './GenericFunctions';
+import { cloudConvertApiRequest, downloadExports } from './GenericFunctions';
 
 export class CloudConvert implements INodeType {
 	description: INodeTypeDescription = {
@@ -344,7 +343,7 @@ export class CloudConvert implements INodeType {
 						},
 					});
 
-					returnData = returnData.concat(responseData.data || []);
+					returnData = returnData.concat(responseData || []);
 				}
 
 				if (operation === 'get') {
@@ -416,33 +415,9 @@ export class CloudConvert implements INodeType {
 							binary: {},
 						};
 
-						const exportTasks = JSONPath({
-							path: '$.data.tasks[?(@.operation==="export/url")]',
-							json: responseData,
-						});
-						// console.dir(exportTasks, { depth: 10 });
+						await downloadExports.call(this, responseData, binaryItem);
 
-						for (const exportTask of exportTasks) {
-							for (const outputFile of JSONPath({
-								path: '$.result.files[*]',
-								json: exportTask,
-							})) {
-								let index = 0;
-								// console.log(`Downloading result file from ${outputFile.url}`);
-
-								const fileContent = await this.helpers.httpRequest({
-									url: outputFile.url,
-									encoding: 'arraybuffer',
-								});
-
-								// console.dir(fileContent);
-
-								binaryItem.binary![`${exportTask.name}_${index++}`] =
-									await this.helpers.prepareBinaryData(fileContent, outputFile.filename);
-							}
-
-							binaryItems.push(binaryItem);
-						}
+						binaryItems.push(binaryItem);
 					}
 
 					returnData = returnData.concat(responseData);

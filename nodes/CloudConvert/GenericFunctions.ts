@@ -1,9 +1,11 @@
+import { JSONPath } from 'jsonpath-plus';
 import { IExecuteFunctions, ILoadOptionsFunctions } from 'n8n-core';
 
 import {
 	IDataObject,
 	IHookFunctions,
 	IHttpRequestOptions,
+	INodeExecutionData,
 	IWebhookFunctions,
 	JsonObject,
 	NodeApiError,
@@ -35,13 +37,49 @@ export async function cloudConvertApiRequest(
 	try {
 		const response = await this.helpers.httpRequest(options);
 		// console.dir(response, { depth: 10 });
-		return response;
+		return response && response.data;
 	} catch (error) {
-		// console.dir(response, { depth: 10 });
 		if (error.response?.data?.message) {
 			error.message += ` - ${error.response.data.code}: ${error.response.data.message}`;
 		}
-		// console.dir(error);
+		// console.dir(error, { depth: 10 });
+
 		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
+}
+
+export async function downloadExports(
+	this: IExecuteFunctions | IWebhookFunctions,
+	job: any,
+	binaryItem: INodeExecutionData,
+): Promise<INodeExecutionData> {
+	const exportTasks = JSONPath({
+		path: '$.tasks[?(@.operation==="export/url")]',
+		json: job,
+	});
+	// console.dir(exportTasks, { depth: 10 });
+
+	for (const exportTask of exportTasks) {
+		for (const outputFile of JSONPath({
+			path: '$.result.files[*]',
+			json: exportTask,
+		})) {
+			let index = 0;
+			// console.log(`Downloading result file from ${outputFile.url}`);
+
+			const fileContent = await this.helpers.httpRequest({
+				url: outputFile.url,
+				encoding: 'arraybuffer',
+			});
+
+			// console.dir(fileContent);
+
+			binaryItem.binary![`${exportTask.name}_${index++}`] = await this.helpers.prepareBinaryData(
+				fileContent,
+				outputFile.filename,
+			);
+		}
+	}
+
+	return binaryItem;
 }
