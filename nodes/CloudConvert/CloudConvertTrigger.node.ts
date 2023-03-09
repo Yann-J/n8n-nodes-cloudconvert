@@ -46,11 +46,7 @@ export class CloudConvertTrigger implements INodeType {
 				name: 'notice_signature',
 				type: 'notice',
 				default: '',
-				displayOptions: {
-					show: {
-						verify: [true],
-					},
-				},
+				displayOptions: {},
 			},
 
 			{
